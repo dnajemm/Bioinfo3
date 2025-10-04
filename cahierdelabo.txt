@@ -1,0 +1,41 @@
+19/09/2025: Loane
+
+Code téléchargement des lectures: ./fasterq-dump --split-files ERR12523370 -O /data/pr
+ojet3/reads_paired_end/ 
+
+-> Création pipeline automatisée  /data/projet3/reads_paired_end/telechargement.sh qui prend /data/projet3/reads_paired_end/sra_list.txt   
+
+22/09/2025 : Dalal 
+
+Code changement des noms des lectures : change_name_en_YJS.py
+
+Il prend les fichiers du dossier reads et les renomment selon le nom de la souche fournit par le fichier excel.
+
+25/09/2025 : Zeynep
+
+# Création de l’environnement (fait plus tôt)
+conda create -p /data/projet3/conda/env 
+# Activation de l’environnement
+conda activate /data/projet3/conda/env
+# Installation de bwa (alignement)
+conda install bioconda::bwa
+# Installation de fastqc (contrôle qualité des reads)
+conda install bioconda::fastqc
+# Installation de bcftools (manipulation et analyse des variants)
+conda install bioconda::bcftools
+# Export de l’environnement dans un fichier YAML
+conda env export -f /data/projet3/environment.yaml
+
+29/09/2025: Dalal 
+
+Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes : script zip.sh 
+Fichiers compressés mises dans /data/projet3/reads_paired_end/compressed_reads
+
+01/10/2025: Mapping BWA Zeynep 
+script:mapping.sh 
+resultats sont présentes dans mapping_results
+
+01/10/2025 : Variant calling BCF tools Dalal
+script : variant_calling.sh
+resultats sont présents dans /data/projet3/results_variant_calling
+
