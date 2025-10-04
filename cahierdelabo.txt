@@ -1,41 +1,51 @@
-19/09/2025: Loane
+# **Cahier de Laboratoire du projet tutoré 3:**
+##### *Groupe : Dalal Najem , Loane Sturny , Zeynep Alas*
 
-Code téléchargement des lectures: ./fasterq-dump --split-files ERR12523370 -O /data/pr
-ojet3/reads_paired_end/ 
 
--> Création pipeline automatisée  /data/projet3/reads_paired_end/telechargement.sh qui prend /data/projet3/reads_paired_end/sra_list.txt   
+#### **19/09/2025**: Récupération des lectures Illumina Loane
 
-22/09/2025 : Dalal 
+Code téléchargement des lectures: ./fasterq-dump --split-files ERR12523370 -O /data/projet3/reads_paired_end/    
+script : telechargement.sh  
+Création pipeline automatisée  /data/projet3/scripts/telechargement.sh qui prend /data/projet3/reads_paired_end/sra_list.txt   
 
-Code changement des noms des lectures : change_name_en_YJS.py
+#### **22/09/2025** : Ajout du nom des souches Dalal 
 
+Code changement des noms des lectures  
+script : change_name_en_YJS.py  
 Il prend les fichiers du dossier reads et les renomment selon le nom de la souche fournit par le fichier excel.
 
-25/09/2025 : Zeynep
+#### **25/09/2025** : creation de l'environment conda + installation des outils Zeynep
 
-# Création de l’environnement (fait plus tôt)
+##### 1-Création de l’environnement (fait plus tôt)
 conda create -p /data/projet3/conda/env 
-# Activation de l’environnement
+##### 2-Activation de l’environnement
 conda activate /data/projet3/conda/env
-# Installation de bwa (alignement)
-conda install bioconda::bwa
-# Installation de fastqc (contrôle qualité des reads)
-conda install bioconda::fastqc
-# Installation de bcftools (manipulation et analyse des variants)
-conda install bioconda::bcftools
-# Export de l’environnement dans un fichier YAML
+##### 3-Installation de bwa (alignement)
+conda install bioconda:bwa
+##### 4-Installation de fastqc (contrôle qualité des reads)
+conda install bioconda:fastqc
+##### 5-Installation de bcftools (manipulation et analyse des variants)
+conda install bioconda:bcftools
+##### 6-Export de l’environnement dans un fichier YAML
 conda env export -f /data/projet3/environment.yaml
 
-29/09/2025: Dalal 
+#### **29/09/2025**: Compression des lectures Dalal 
 
-Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes : script zip.sh 
+Installation de gzip dans environment conda : ajout de gzip dans fichier environment.yaml
+Update de l'environment conda : conda env update -p /data/projet3/conda/env -f environment.yaml
+Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes.  
+script: gzip.sh   
 Fichiers compressés mises dans /data/projet3/reads_paired_end/compressed_reads
 
-01/10/2025: Mapping BWA Zeynep 
-script:mapping.sh 
-resultats sont présentes dans mapping_results
+#### **01/10/2025**: Mapping BWA Zeynep
 
-01/10/2025 : Variant calling BCF tools Dalal
-script : variant_calling.sh
-resultats sont présents dans /data/projet3/results_variant_calling
+Mapping des lectures d'Illumina sur le génome de référence.  
+script: mapping.sh   
+resultats sont présentes dans /data/projet3/results_mapping
+
+#### **01/10/2025** : Variant calling BCF tools Dalal
+
+Utilisation de BCF tools pour faire du Variant calling sur les fichiers d'alignements bam.
+script : variant_calling.sh  
+resultats sont présents dans /data/projet3/results_variant_calling  
 
