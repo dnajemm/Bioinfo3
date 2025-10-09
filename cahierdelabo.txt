@@ -29,8 +29,11 @@ conda install bioconda:bcftools
 ##### 6-Export de l’environnement dans un fichier YAML
 conda env export -f /data/projet3/environment.yaml
 
-#### **29/09/2025**: Compression des lectures Dalal 
+### controle qualité des lectures Loane
 
+
+#### **29/09/2025**: Compression des lectures Dalal 
+version utilisée : gzip 1.14
 Installation de gzip dans environment conda : ajout de gzip dans fichier environment.yaml
 Update de l'environment conda : conda env update -p /data/projet3/conda/env -f environment.yaml
 Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes.  
@@ -38,13 +41,13 @@ script: gzip.sh
 Fichiers compressés mises dans /data/projet3/reads_paired_end/compressed_reads
 
 #### **01/10/2025**: Mapping BWA Zeynep
-
+version utilisée : bwa 0.7.19
 Mapping des lectures d'Illumina sur le génome de référence.  
 script: mapping.sh   
 resultats sont présentes dans /data/projet3/results_mapping
 
 #### **01/10/2025** : Variant calling BCF tools Dalal
-
+version utilisée : bcftools 1.22
 Utilisation de BCF tools pour faire du Variant calling sur les fichiers d'alignements bam.
 script : variant_calling.sh  
 resultats sont présents dans /data/projet3/results_variant_calling  
