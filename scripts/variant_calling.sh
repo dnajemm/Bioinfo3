@@ -11,7 +11,7 @@ THREADS=8                                           # number of CPU cores used
 
 for f in $Mapping_reads_DIR/*.bam; do  # loop through all .bam files
     SAMPLE=$(basename "$f" .bam)     # sample name
-    echo "Processing $SAMPLE "
+    
     
     bcftools mpileup -Ou -f $REF "$f" \   # generate genotype likelihoods -f reference genome 
     | bcftools call -mv -Oz -o $OUT_DIR/${SAMPLE}.vcf.gz 

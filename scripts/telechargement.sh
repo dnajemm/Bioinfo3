@@ -1,11 +1,10 @@
 #!/bin/bash
-# Script to download FASTQ files from SRA using fasterq-dump
-OUT_DIR=/data/projet3/reads_paired_end/
 
-FASTQ_DUMP=/data/projet3/sra/sratoolkit.3.2.1-ubuntu64/bin/fasterq-dump
+OUT_DIR=/data/projet3/Input/reads_paired_end/reads  #output directory
+
+FASTQ_DUMP=/data/projet3/sra/sratoolkit.3.2.1-ubuntu64/bin/fasterq-dump  #path to fastq-dump tool
 
 
 while read -r SRA_ID; do
-    echo "Téléchargement de $SRA_ID..."
-    $FASTQ_DUMP --split-files $SRA_ID -O $OUT_DIR # --split-files pour les reads appariés
-done < /data/projet3/reads_paired_end/sra_list.txt
+    $FASTQ_DUMP --split-files $SRA_ID -O $OUT_DIR  #--split-files to get paired-end reads
+done < /data/projet3/Input/reads_paired_end/sra_list.txt   #input file with SRA IDs
