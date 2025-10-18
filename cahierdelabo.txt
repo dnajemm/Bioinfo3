@@ -2,19 +2,24 @@
 ##### *Groupe : Dalal Najem , Loane Sturny , Zeynep Alas*
 
 
-#### **19/09/2025**: Récupération des lectures Illumina Loane
-
-Code téléchargement des lectures: ./fasterq-dump --split-files ERR12523370 -O /data/projet3/reads_paired_end/    
+####**19/09/2025**: Installation de SRA tool kit et Récupération des lectures Illumina Loane  
+Utilisation de fasterq-dump de sra tool kit pour récupérer les lectures Illumina.  
+version : fasterq-dump 3.2.1  
+Code téléchargement des lectures: ./fasterq-dump --split-files ERR12523370 -O /data/projet3/Input/reads_paired_end/reads    
 script : telechargement.sh  
-Création pipeline automatisée  /data/projet3/scripts/telechargement.sh qui prend /data/projet3/reads_paired_end/sra_list.txt   
-
-#### **22/09/2025** : Ajout du nom des souches Dalal 
-
-Code changement des noms des lectures  
-script : change_name_en_YJS.py  
+option:  
+--split-files : pour avoir les fichiers paired_end.  
+-O : indique le dossier de sortie  
+Création pipeline automatisée  /data/projet3/scripts/telechargement.sh qui prend /data/projet3/Input/reads_paired_end/sra_list.txt   
+sra_list.txt : fichier avec la liste des noms de reads.  
+  
+#### **22/09/2025**: Ajout du nom des souches Dalal    
+version python utilisée : Python 3.13.7  
+Code changement des noms des lectures.  
+script : change_name_en_YJS.py    
 Il prend les fichiers du dossier reads et les renomment selon le nom de la souche fournit par le fichier excel.
 
-#### **25/09/2025** : creation de l'environment conda + installation des outils Zeynep
+#### **25/09/2025**: Creation de l'environment conda + installation des outils Zeynep   
 
 ##### 1-Création de l’environnement (fait plus tôt)
 conda create -p /data/projet3/conda/env 
@@ -27,28 +32,126 @@ conda install bioconda:fastqc
 ##### 5-Installation de bcftools (manipulation et analyse des variants)
 conda install bioconda:bcftools
 ##### 6-Export de l’environnement dans un fichier YAML
-conda env export -f /data/projet3/environment.yaml
+conda env export -f /data/projet3/environment.yaml  
+options:       
+-p : Chemin de l’environnement cible    
+-f : Fichier YAML à lire pour les dépendances  
 
-### controle qualité des lectures Loane
 
+#### **29/09/2025**: Compression des lectures Dalal   
+version utilisée : gzip 1.14  
+Installation de gzip dans environment conda : ajout de gzip dans fichier environment.yaml  
+Update de l'environment conda : conda env update -p /data/projet3/conda/env -f environment.yaml  
+options:     
+-p : Chemin de l’environnement cible  
+-f : Fichier YAML à lire pour les dépendances
 
-#### **29/09/2025**: Compression des lectures Dalal 
-version utilisée : gzip 1.14
-Installation de gzip dans environment conda : ajout de gzip dans fichier environment.yaml
-Update de l'environment conda : conda env update -p /data/projet3/conda/env -f environment.yaml
-Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes.  
-script: gzip.sh   
-Fichiers compressés mises dans /data/projet3/reads_paired_end/compressed_reads
+Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes.    
+script: gzip.sh    
+option:    
+-c : écrire vers la sortie standard et garder le fichier original inchangé  
+Fichiers compressés mises dans /data/projet3/Input/reads_paired_end/compressed_reads
 
-#### **01/10/2025**: Mapping BWA Zeynep
-version utilisée : bwa 0.7.19
-Mapping des lectures d'Illumina sur le génome de référence.  
+#### **01/10/2025**: Mapping BWA Zeynep    
+version utilisée : bwa 0.7.19  
+Mapping des lectures d'Illumina sur le génome de référence.     
 script: mapping.sh   
-resultats sont présentes dans /data/projet3/results_mapping
 
-#### **01/10/2025** : Variant calling BCF tools Dalal
-version utilisée : bcftools 1.22
-Utilisation de BCF tools pour faire du Variant calling sur les fichiers d'alignements bam.
+##### **bwa mem**  
+Commande utilisée pour aligner les lectures Illumina sur le génome de référence.  
+mem : algorithme optimisé pour les lectures longues (≥70 pb).  
+options:  
+-t 8 : utilise 8 threads pour accélérer le calcul.  
+-M : marque les alignements secondaires (split hits) pour compatibilité avec Picard et GATK.  
+-R `"@RG\tID:${PREFIX}\tSM:${PREFIX}"` : ajoute une étiquette Read Group contenant :  
+ID : identifiant unique du groupe de lectures (ici, le nom de la souche).  
+SM : nom de l’échantillon.  
+Ces informations sont essentielles pour les étapes de variant calling multi-échantillons.  
+`"$REF"` : fichier FASTA du génome de référence utilisé pour l’alignement.  
+`"$R1"` `"$R2"` : fichiers FASTQ contenant les lectures appariées (forward et reverse).  
+La sortie de bwa mem est directement envoyée à samtools sort via un pipe (|), sans création de fichier temporaire.  
+
+##### **samtools sort**  
+Trie les alignements produits par bwa mem selon leur position sur le génome et convertit le flux SAM en fichier BAM binaire compressé.  
+options:  
+-@ 8 : utilise 8 threads pour le tri parallèle.  
+-o `"$BAM"` : définit le nom du fichier BAM de sortie.  
+`-` : indique que l’entrée provient du flux précédent (bwa mem).  
+Sortie : fichier `${PREFIX}.bam`, contenant les alignements triés par position.  
+
+##### **samtools index**  
+Crée un fichier d’index .bai pour chaque BAM.  
+Cet index permet un accès rapide à des régions spécifiques du génome lors de la visualisation ou du variant calling.  
+
+Resultats sont présents dans /data/projet3/Output/results_mapping
+
+#### **01/10/2025** : Variant calling BCF tools Dalal    
+version utilisée : bcftools 1.22  
+Utilisation de BCF tools pour faire du Variant calling sur les fichiers d'alignements bam.  
 script : variant_calling.sh  
-resultats sont présents dans /data/projet3/results_variant_calling  
+
+##### **bcftools mpileup**  
+Cette commande génère les vraisemblances de génotypes pour un échantillon en utilisant le génome de référence.  
+options:    
+-O : spécifie le format de sortie.  
+u : signifie uncompressed BCF (BCF non compressé).  
+--> permet d’envoyer directement la sortie à une autre commande via un pipe (|), sans passer par un fichier intermédiaire.  
+
+##### **bcftools call**  
+Cette commande appelle les variants (SNPs et indels) à partir des vraisemblances de génotypes générées par bcftools mpileup.  
+Elle analyse le flux BCF en entrée et détermine les positions où les bases observées diffèrent de la séquence de référence.  
+options:  
+-m : utilise le modèle "multialléliques", qui permet d’identifier plusieurs allèles alternatifs possibles à une même position.  
+-v : n’écrit dans la sortie que les sites variants (ignore les positions identiques à la référence).  
+-O z : écrit la sortie au format VCF compressé (bgzip) pour un stockage plus léger et une compatibilité avec tabix.  
+-o `$OUT_DIR/${SAMPLE}.vcf.gz` : définit le chemin et le nom du fichier de sortie contenant les variants de l’échantillon.  
+
+##### **tabix**  
+Cette commande indexe les fichiers VCF compressés (.vcf.gz) afin de permettre un accès rapide à des régions précises du génome sans devoir parcourir tout le fichier.  
+Elle crée un fichier d’index (.tbi) correspondant au fichier VCF compressé.  
+options:     
+-p vcf : précise le type de fichier à indexer. Ici, le format est VCF (Variant Call Format).  
+`$OUT_DIR/${SAMPLE}.vcf.gz` : fichier d’entrée, le VCF compressé produit par bcftools call.  
+
+Resultats sont présents dans /data/projet3/Output/results_variant_calling  
+
+#### **10/10/2025** : Contrôle qualité des lectures Loane   
+FastQC doit se faire après l'étape de récupération des lectures, mais comme la qualité à déjà été vérifié avant le début du projet on l'a fait seulement ici.  
+version utilisée : FastQC v0.12.1    
+script: fastqc.sh     
+-O indique le répertoire de sortie des fichiers    
+Résultats sont présents dans /data/projet3/Output/fastqc_results    
+
+#### **16-18/10/2025** : Filtrage des lectures Loane    
+Filtre les lectures après étape du variant calling pour laisser juste les variants SNP heterozygotes (depth >= 5 et ratio d'allèle entre 0.4-0.6)            
+version utilisée : bcftools 1.22      
+script: filtrage.sh     
+
+##### **bcftools view**    
+Commande de visualisation/sous-échantillonnage des snps.     
+script: filtrage.sh            
+options:    
+-v snps : garde juste les snps    
+-m2 : Nombre minimum d’allèles alternatifs    
+-M2 : Nombre maximum d’allèles alternatifs    
+
+##### **bcftools filter**    
+Commande de filtrage    
+GT="het": pour avoir les hétérozygotes        
+on utilise le champ FORMAT/AD (Allelic Depths), qui donne le nombre de lectures soutenant chaque allèle.    
+AD[0:0] = profondeur pour l’allèle de référence  
+AD[0:1] = profondeur pour l’allèle alternatif  
+(AD[0:0]+AD[0:1]) >= 5 : total de lectures ≥ 5 = profondeur     
+Entre 0.40 et 0.60 : génotype hétérozygote    
+options:    
+-Oz : Format de sortie compressé (gzip)    
+-o : Nom du fichier de sortie          
+-i : Inclusion filter            
+
+##### **bcftools index**  
+Crée un index .tbi    
+option:    
+-f : force : forces la recréation de l’index même s’il existe déjà.        
+
+Résultats sont présents dans /data/projet3/Output/results_filtering       
 
