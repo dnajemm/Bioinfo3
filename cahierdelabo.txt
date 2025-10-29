@@ -151,7 +151,55 @@ options:
 ##### **bcftools index**  
 Crée un index .tbi    
 option:    
--f : force : forces la recréation de l’index même s’il existe déjà.        
+-f : force : forces la recréation de l’index même s’il existe déjà.          
 
-Résultats sont présents dans /data/projet3/Output/results_filtering       
+Résultats sont présents dans /data/projet3/Output/results_filtering    
+
+#### **20/10/2025** : Comptage d’hétérozygotie: sliding windows Zeynep  
+Commande 1 pour faire 1kb :générer, pour chaque souche, un profil du nombre de SNPs hétérozygotes par fenêtre de 1 kb, afin de préparer la détection des régions de LOH.  
+versions utilisées :vcftools v0.1.17/bcftools 1.22  
+script : sliding_window.sh  
+Commandes principales utilisées dans le script :  
+bcftools view -g het  
+-g het : ne garde que les sites hétérozygotes (génotypes 0/1)=On travaille seulement avec les SNPs informatifs pour LOH  
+vcftools --SNPdensity 1000  
+--SNPdensity 1000 : découpe le génome en fenêtres non-chevauchantes de 1000 bases (1 kb)  
+compte, pour chaque fenêtre, le nombre de SNP hétérozygotes  
+produit un tableau avec : CHROM BIN_START SNP_COUNT VARIANTS/Kb  
+awk  
+ajoute une colonne SAMPLE et concatène toutes les souches,génère un fichier final : all_samples.het.1kb.snpden.tsv ,ce fichier nous servira pour les plots (R)  
+Résultats  presents dans /data/projet3/Output/results_1kb/  
+1 fichier par souche : YJSxxxx.het.1kb.snpden  
+1 fichier fusionné : all_samples.het.1kb.snpden.tsv  
+
+#### **20/10/2025** : Comptage d’hétérozygotie: sliding windows de 5,10,20kb à partir de 1kb  Zeynep  
+ 
+Produire des fenêtres non-chevauchantes de 5 kb, 10 kb et 20 kb à partir des fichiers .het.1kb.snpden afin de lisser le signal d’hétérozygotie pour préparer l’analyse LOH.  
+script : sliding_win2.sh  
+entrée : /data/projet3/Output/results_1kb/*.het.1kb.snpden  
+Commandes et options utilisées  
+bash + set -euo pipefail  
+Force le script propre : stop en cas d’erreur (-e), interdiction des variables non-déclarées (-u), erreurs dans les pipes détectées (-o pipefail).  
+IN_DIR / OUT_DIR + mkdir -p  
+Definit les chemins d’entrée/sortie. mkdir -p crée le dossier si nécessaire.  
+aggregate_N (fonction awk)  
+Agrege N lignes consecutives correspondant à des fenêtres de 1 kb pour reconstruire une fenetre N×1 kb.  
+Ne laisse passer que des fenêtres complètes (pas de partiel).  
+Réinitialise quand le chromosome change.  
+awk -v N=5 / N=10 / N=20  
+-v N=… passe la taille de fenêtre (en nombre de bins de 1 kb).  
+Additionne N valeurs, puis écrit : CHROM START END N_HET.  
+awk -v S=… -v W=… 'print ...' >> MERGED  
+Ajoute les colonnes SAMPLE et WINDOW_BP et concatène toutes les souches dans un seul fichier final par taille de fenêtre (5kb, 10kb, 20kb).  
+> / >> redirections  
+> écrase un fichier (pour écrire les entêtes).  
+>> ajoute à la suite (pour remplir les fichiers fusionnés).  
+Aucune dépendance supplémentaire cad aucune ré-exécution de vcftools : uniquement re-formatage depuis les 1 kb déjà produits.  
+Les resultats sont present dans :  /data/projet3/Output/results_windows/  
+
+#### **28-29/10/2025** : Plotting Dalal + Loane       
+Génération des plots d’hétérozygotie pour chaque souche, un graphique par souche avec plusieurs subplots pour les chromosomes différenciés par couleur, affichant le nombre de SNPs hétérozygotes en fonction de la position en kb.                
+version python utilisée : Python 3.13.7           
+script: plot.py   
+Résultats presents dans results_plot en fct de la taille de sliding window utilisée.        
 
