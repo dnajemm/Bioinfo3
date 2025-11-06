@@ -1,7 +1,6 @@
-# **Cahier de Laboratoire du projet tutoré 3:**
-##### *Groupe : Dalal Najem , Loane Sturny , Zeynep Alas*
-
-
+# **Cahier de Laboratoire du projet tutoré 3:**  
+##### *Groupe : Dalal Najem , Loane Sturny , Zeynep Alas*  
+ 
 ####**19/09/2025**: Installation de SRA tool kit et Récupération des lectures Illumina Loane  
 Utilisation de fasterq-dump de sra tool kit pour récupérer les lectures Illumina.  
 version : fasterq-dump 3.2.1  
@@ -17,46 +16,46 @@ sra_list.txt : fichier avec la liste des noms de reads.
 version python utilisée : Python 3.13.7  
 Code changement des noms des lectures.  
 script : change_name_en_YJS.py    
-Il prend les fichiers du dossier reads et les renomment selon le nom de la souche fournit par le fichier excel.
-
+Il prend les fichiers du dossier reads et les renomment selon le nom de la souche fournit par le fichier excel.  
+  
 #### **25/09/2025**: Creation de l'environment conda + installation des outils Zeynep   
-
-##### 1-Création de l’environnement (fait plus tôt)
-conda create -p /data/projet3/conda/env 
-##### 2-Activation de l’environnement
-conda activate /data/projet3/conda/env
-##### 3-Installation de bwa (alignement)
-conda install bioconda:bwa
-##### 4-Installation de fastqc (contrôle qualité des reads)
-conda install bioconda:fastqc
-##### 5-Installation de bcftools (manipulation et analyse des variants)
-conda install bioconda:bcftools
-##### 6-Export de l’environnement dans un fichier YAML
-conda env export -f /data/projet3/environment.yaml  
+ 
+##### 1-Création de l’environnement (fait plus tôt)  
+conda create -p /data/projet3/conda/env   
+##### 2-Activation de l’environnement  
+conda activate /data/projet3/conda/env  
+##### 3-Installation de bwa (alignement)  
+conda install bioconda:bwa  
+##### 4-Installation de fastqc (contrôle qualité des reads)  
+conda install bioconda:fastqc  
+##### 5-Installation de bcftools (manipulation et analyse des variants)  
+conda install bioconda:bcftools  
+##### 6-Export de l’environnement dans un fichier YAML  
+conda env export -f /data/projet3/environment.yaml    
 options:       
 -p : Chemin de l’environnement cible    
 -f : Fichier YAML à lire pour les dépendances  
-
-
+ 
+ 
 #### **29/09/2025**: Compression des lectures Dalal   
 version utilisée : gzip 1.14  
 Installation de gzip dans environment conda : ajout de gzip dans fichier environment.yaml  
 Update de l'environment conda : conda env update -p /data/projet3/conda/env -f environment.yaml  
 options:     
 -p : Chemin de l’environnement cible  
--f : Fichier YAML à lire pour les dépendances
-
+-f : Fichier YAML à lire pour les dépendances  
+ 
 Compression des lectures d'Illumina (fichiers fastq) en des fichiers .gz pour diminuer leur volumes.    
 script: gzip.sh    
 option:    
 -c : écrire vers la sortie standard et garder le fichier original inchangé  
-Fichiers compressés mises dans /data/projet3/Input/reads_paired_end/compressed_reads
-
+Fichiers compressés mises dans /data/projet3/Input/reads_paired_end/compressed_reads  
+ 
 #### **01/10/2025**: Mapping BWA Zeynep    
 version utilisée : bwa 0.7.19  
 Mapping des lectures d'Illumina sur le génome de référence.     
 script: mapping.sh   
-
+ 
 ##### **bwa mem**  
 Commande utilisée pour aligner les lectures Illumina sur le génome de référence.  
 mem : algorithme optimisé pour les lectures longues (≥70 pb).  
@@ -70,7 +69,7 @@ Ces informations sont essentielles pour les étapes de variant calling multi-éc
 `"$REF"` : fichier FASTA du génome de référence utilisé pour l’alignement.  
 `"$R1"` `"$R2"` : fichiers FASTQ contenant les lectures appariées (forward et reverse).  
 La sortie de bwa mem est directement envoyée à samtools sort via un pipe (|), sans création de fichier temporaire.  
-
+ 
 ##### **samtools sort**  
 Trie les alignements produits par bwa mem selon leur position sur le génome et convertit le flux SAM en fichier BAM binaire compressé.  
 options:  
@@ -78,25 +77,25 @@ options:
 -o `"$BAM"` : définit le nom du fichier BAM de sortie.  
 `-` : indique que l’entrée provient du flux précédent (bwa mem).  
 Sortie : fichier `${PREFIX}.bam`, contenant les alignements triés par position.  
-
+ 
 ##### **samtools index**  
 Crée un fichier d’index .bai pour chaque BAM.  
 Cet index permet un accès rapide à des régions spécifiques du génome lors de la visualisation ou du variant calling.  
-
-Resultats sont présents dans /data/projet3/Output/results_mapping
-
+ 
+Resultats sont présents dans /data/projet3/Output/results_mapping  
+ 
 #### **01/10/2025** : Variant calling BCF tools Dalal    
 version utilisée : bcftools 1.22  
 Utilisation de BCF tools pour faire du Variant calling sur les fichiers d'alignements bam.  
 script : variant_calling.sh  
-
+ 
 ##### **bcftools mpileup**  
 Cette commande génère les vraisemblances de génotypes pour un échantillon en utilisant le génome de référence.  
 options:    
 -O : spécifie le format de sortie.  
 u : signifie uncompressed BCF (BCF non compressé).  
 --> permet d’envoyer directement la sortie à une autre commande via un pipe (|), sans passer par un fichier intermédiaire.  
-
+ 
 ##### **bcftools call**  
 Cette commande appelle les variants (SNPs et indels) à partir des vraisemblances de génotypes générées par bcftools mpileup.  
 Elle analyse le flux BCF en entrée et détermine les positions où les bases observées diffèrent de la séquence de référence.  
@@ -105,28 +104,28 @@ options:
 -v : n’écrit dans la sortie que les sites variants (ignore les positions identiques à la référence).  
 -O z : écrit la sortie au format VCF compressé (bgzip) pour un stockage plus léger et une compatibilité avec tabix.  
 -o `$OUT_DIR/${SAMPLE}.vcf.gz` : définit le chemin et le nom du fichier de sortie contenant les variants de l’échantillon.  
-
+ 
 ##### **tabix**  
 Cette commande indexe les fichiers VCF compressés (.vcf.gz) afin de permettre un accès rapide à des régions précises du génome sans devoir parcourir tout le fichier.  
 Elle crée un fichier d’index (.tbi) correspondant au fichier VCF compressé.  
 options:     
 -p vcf : précise le type de fichier à indexer. Ici, le format est VCF (Variant Call Format).  
 `$OUT_DIR/${SAMPLE}.vcf.gz` : fichier d’entrée, le VCF compressé produit par bcftools call.  
-
+ 
 Resultats sont présents dans /data/projet3/Output/results_variant_calling  
-
+ 
 #### **10/10/2025** : Contrôle qualité des lectures Loane   
 FastQC doit se faire après l'étape de récupération des lectures, mais comme la qualité à déjà été vérifié avant le début du projet on l'a fait seulement ici.  
 version utilisée : FastQC v0.12.1    
 script: fastqc.sh     
 -O indique le répertoire de sortie des fichiers    
 Résultats sont présents dans /data/projet3/Output/fastqc_results    
-
+ 
 #### **16-18/10/2025** : Filtrage des lectures Loane    
 Filtre les lectures après étape du variant calling pour laisser juste les variants SNP heterozygotes (depth >= 5 et ratio d'allèle entre 0.4-0.6)            
 version utilisée : bcftools 1.22      
 script: filtrage.sh     
-
+ 
 ##### **bcftools view**    
 Commande de visualisation/sous-échantillonnage des snps.     
 script: filtrage.sh            
@@ -134,7 +133,7 @@ options:
 -v snps : garde juste les snps    
 -m2 : Nombre minimum d’allèles alternatifs    
 -M2 : Nombre maximum d’allèles alternatifs    
-
+ 
 ##### **bcftools filter**    
 Commande de filtrage    
 GT="het": pour avoir les hétérozygotes        
@@ -147,14 +146,14 @@ options:
 -Oz : Format de sortie compressé (gzip)    
 -o : Nom du fichier de sortie          
 -i : Inclusion filter            
-
+ 
 ##### **bcftools index**  
 Crée un index .tbi    
 option:    
 -f : force : forces la recréation de l’index même s’il existe déjà.          
-
+ 
 Résultats sont présents dans /data/projet3/Output/results_filtering    
-
+ 
 #### **20/10/2025** : Comptage d’hétérozygotie: sliding windows Zeynep  
 Commande 1 pour faire 1kb :générer, pour chaque souche, un profil du nombre de SNPs hétérozygotes par fenêtre de 1 kb, afin de préparer la détection des régions de LOH.  
 versions utilisées :vcftools v0.1.17/bcftools 1.22  
@@ -171,7 +170,7 @@ ajoute une colonne SAMPLE et concatène toutes les souches,génère un fichier f
 Résultats  presents dans /data/projet3/Output/results_1kb/  
 1 fichier par souche : YJSxxxx.het.1kb.snpden  
 1 fichier fusionné : all_samples.het.1kb.snpden.tsv  
-
+ 
 #### **20/10/2025** : Comptage d’hétérozygotie: sliding windows de 5,10,20kb à partir de 1kb  Zeynep  
  
 Produire des fenêtres non-chevauchantes de 5 kb, 10 kb et 20 kb à partir des fichiers .het.1kb.snpden afin de lisser le signal d’hétérozygotie pour préparer l’analyse LOH.  
@@ -196,10 +195,69 @@ Ajoute les colonnes SAMPLE et WINDOW_BP et concatène toutes les souches dans un
 >> ajoute à la suite (pour remplir les fichiers fusionnés).  
 Aucune dépendance supplémentaire cad aucune ré-exécution de vcftools : uniquement re-formatage depuis les 1 kb déjà produits.  
 Les resultats sont present dans :  /data/projet3/Output/results_windows/  
-
+ 
 #### **28-29/10/2025** : Plotting Dalal + Loane       
 Génération des plots d’hétérozygotie pour chaque souche, un graphique par souche avec plusieurs subplots pour les chromosomes différenciés par couleur, affichant le nombre de SNPs hétérozygotes en fonction de la position en kb.                
 version python utilisée : Python 3.13.7           
 script: plot.py   
-Résultats presents dans results_plot en fct de la taille de sliding window utilisée.        
+Résultats presents dans results_plot en fct de la taille de sliding window utilisée.  
+ 
+#### **04/11/2025** : Annotation LOH/HET des fenêtres 5 kb (Zeynep)  
+But est d'ajouter une colonne STATUS par fenêtre (LOH vs HET) sur toutes les sorties 5 kb, avec la règle LOH si N_HET ≤ 3, sinon HET.  
+script : loh.py  
+options utilisées :  
+glob.glob() : permet de parcourir automatiquement tous les fichiers correspondant au motif donné.  
+threshold = 3 : fixe la limite pour décider entre LOH et HET  
+replace(".het.5kb.tsv", ".het.5kb_LOH.tsv") : crée un fichier de sortie sans écraser les originaux.  
+enumerate(fin) : garde la position de la ligne (utile pour distinguer l’en-tête).  
+try/except ValueError : évite une erreur si la colonne N_HET contient autre chose qu’un entier.  
+\t.join(parts)` : conserve le format TSV (tabulé).  
+Chaque fichier produit a donc la même structure que l’original, avec une colonne STATUS en plus.  
+ 
+Recalcul global avec awk (fichier fusionné “all_samples”)  
+nettoyer et recalculer la colonne STATUS dans le fichier global (all_samples.het.5kb_LOH.tsv), en supprimant la colonne erronée précédente.  
+partie awk du code  
+options utilisée :  
+BEGIN{OFS="\t"} : définit le séparateur de colonnes à la tabulation pour la sortie.  
+NR==1{...; next} : traite la première ligne (l’en-tête) -> imprime uniquement les 6 premières colonnes et ajoute une nouvelle colonne STATUS.  
+{print $1,$2,$3,$4,$5,$6,($5<=3?"LOH":"HET")} :  
+$5 = colonne N_HET.  
+Si $5 <= 3 -> écrit LOH, sinon HET.  
+La colonne STATUS précédente (7e) est donc supprimée, remplacée par une colonne recalculée.  
+> : redirige le résultat dans un nouveau fichier _recalc.tsv (sans écraser l’original).  
+ 
+Résultats présants dans results_windows  
+ 
+#### **04/11/2025** : Ajout d'header  
+script utilisée : header.py  
+Options utilisées :  
+glob.glob() : sélectionne tous les fichiers .tsv du dossier.  
+if "all" in f: : ignore les fichiers fusionnés globaux.  
+if "5kb_LOH" / "10kb" / "20kb" : définit le bon en-tête selon la taille de fenêtre.  
+startswith("CHROM") : vérifie si un en-tête est déjà présent.  
+write(header) + writelines(lines) : ajoute l’en-tête puis recopie le contenu original.  
+partie awk du code  
+Options utilisées :  
+BEGIN{OFS="\t"} : sortie tabulée (format TSV).  
+NR==1 : remplace l’en-tête existant.  
+$4 : colonne N_HET.  
+(n<=3?"LOH":"HET") : applique la règle LOH/HET.  
+> "${f%.tsv}_fixed.tsv" : crée un nouveau fichier sans écraser l’ancien.  
+ 
+Résultats présents dans : /data/projet3/Output/results_windows/  
+ 
+#### **04-6/11/2025** : Plotting Heatmaps Dalal     
+Génération des heatmaps de LOH pour chaque chromosome afin de comparer les régions LOH et HET entre différentes souches sur une grille commune de 1 kb.  
+Concatenation des chromosomes pour obtenir une représentation continue du génome entier sous forme de heatmap combinée.    
+version python utilisée : Python 3.13.7      
+librairies utilisées :   
+import pandas as pd  
+import numpy as np  
+import matplotlib.pyplot as plt  
+from pathlib import Path  
+from matplotlib.patches import Rectangle  
+from matplotlib.lines import Line2D         
+script: heatmap.py     
+input : /data/projet3/Input/tableauSouches.xlsx and /data/projet3/Output/results_windows/all_samples.het.5kb_LOH_recalc.tsv   
 
+Résultats présents dans /data/projet3/Output/results_heatmap     
