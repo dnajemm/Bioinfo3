@@ -1,0 +1,86 @@
+# Project 3 - Genomic Variant Analysis  
+ 
+This repository contains a bioinformatics pipeline for the identification and analysis of genomic variants from Illumina sequencing data.  
+The workflow includes quality control (FastQC and variant filtering), read alignment, variant calling, heterozygosity analysis using sliding windows, and final visualization of results through LOH/heterozygosity heatmaps.  
+ 
+## Project Structure  
+ 
+projet3/  
+├── Input/                  # Input data  
+│   ├── reads_paired_end/   # FASTQ Illumina sequencing data    \
+│   │   ├── reads/          # Raw FASTQ files  
+│   │   ├── compressed_reads.gz/ # Compressed reads  
+│   │   └── sra_list.txt    # SRA accession numbers  
+│   ├── reference/          # Reference genome files  
+│   │   ├── brbr.fasta      # Reference genome FASTA  
+│   │   ├── brbr.fasta.*    # BWA index files (.amb, .ann, .bwt, .pac, .sa)  
+│   │   ├── brbr.fasta.fai  # FASTA index  
+│   │   └── brbr.gff        # Gene annotation file  
+│   └── tableauSouches.xlsx # Sample information table  
+├── Output/                 # Analysis results  
+│   ├── fastqc_results/     # Quality control reports  
+│   ├── result_density_plot/    # Density plots  
+│   ├── results_1kb/        # 1kb sliding window results  
+│   ├── results_filtering/  # Filtered VCF variant files  
+│   ├── results_heatmap/    # Heatmap plots  
+│   ├── results_mapping/    # Alignment results (BAM/SAM files)  
+│   ├── results_numbers_SNP_het/  # Counts of SNPs and heterozygosity  
+│   ├── results_plot/       # Heterozygosity plots for different window sizes  
+│   ├── results_variant_calling/  # Variant calling results (VCF files)  
+│   └── results_windows/    # Sliding window results (5kb,10kb,20kb)  
+├── scripts/                # Analysis scripts  
+│   ├── change_name_en_YJS.py      # Rename compressed files to YJS format  
+│   ├── count_number_SNPs.py       # Count SNPs per sample/region  
+│   ├── density_plot.py            # Generate density plots of all strains  
+│   ├── fastqc.sh                  # Run FastQC quality control  
+│   ├── filtrage.sh                # Filter variants with bcftools  
+│   ├── gzip.sh                    # Compress FASTQ files  
+│   ├── header.py                  # Utility functions for file headers  
+│   ├── heatmap.py                 # Generate LOH/heterozygosity heatmaps  
+│   ├── loh.py                     # LOH calculation functions  
+│   ├── mapping.sh                 # BWA-MEM alignment  
+│   ├── plot.py                    # Individual sample heterozygosity plots  
+│   ├── sliding_win2.sh            # 5kb/10kb/20kb sliding windows  
+│   ├── sliding_window.sh          # 1kb sliding windows  
+│   ├── telechargement.sh          # Download from SRA  
+│   └── variant_calling.sh         # Variant calling with bcftools  
+├── conda/                  # Conda environment directory  
+│   └── env/                # Local conda environment files  
+├── sra/                    # Downloaded SRA data files  
+├── README                  # Project documentation  
+├── cahierdelabo.txt        # Lab notebook  
+├── environment.yaml        # Conda environment specification  
+└── .gitignore              # Git ignore file  
+ 
+## Analysis Pipeline  
+ 
+### 1. Data Download, Compression and Renaming  
+- Download sequencing data from SRA using `sra-tools` with `telechargement.sh` script → results stored in `/Input/reads_paired_end/reads/`  
+- Compress the downloaded FASTQ files using `gzip.sh` script → results stored in `/Input/reads_paired_end/compressed_reads/`    
+- Rename the compressed files to YJS format using `change_name_en_YJS.py` script  
+### 2. Quality Control  
+- Perform quality checks using FastQC with `fastqc.sh` script → results stored in `/Output/fastqc_results/`  
+### 3. Read Alignment  
+- Align reads to reference genome using BWA-MEM with `mapping.sh` script → results stored in `/Output/results_mapping/`  
+### 4. Variant Calling  
+- Call variants using bcftools (mpileup & call) with `variant_calling.sh` script → results stored in `/Output/results_variant_calling/`  
+### 5. Filtering Variants  
+- Filter variants using bcftools filter with `filtrage.sh` script → results stored in `/Output/results_filtering/`  
+### 6. Sliding Window Analysis  
+- Analyze heterozygosity in 1kb windows using `sliding_window.sh` script → results stored in `/Output/results_1kb/`  
+- Analyze heterozygosity in 5kb/10kb/20kb windows using `sliding_win2.sh` script → results stored in `/Output/results_windows/`  
+### 7. Visualization and Analysis  
+- Generate individual sample plots using `plot.py` script → results stored in `/Output/results_plot/`  
+- Generate density plots (all strains combined) using `density_plot.py` script → results stored in `/Output/result_density_plot/`  
+- Count SNPs per sample/region using `count_number_SNPs.py` script → results stored in `/Output/results_numbers_SNP_het/`  
+### 8. Heatmap Generation  
+- Generate LOH/heterozygosity heatmaps using `heatmap.py` script → results stored in `/Output/results_heatmap/`  
+- **Input files:**  
+  - `/Output/results_windows/all_samples.het.5kb_LOH_recalc.tsv`  
+  - `/Input/tableauSouches.xlsx`  
+ 
+## Requirements  
+ 
+- **Command-line tools:** `sra-tools`, `fastqc`, `bwa`, `samtools`, `bcftools`, `gzip`, `bash`  
+- **Python packages:** `pandas`, `numpy`, `matplotlib`, `openpyxl`, `pathlib`  
+- All dependencies are listed in `environment.yaml`.  
