@@ -261,3 +261,15 @@ script: heatmap.py
 input : /data/projet3/Input/tableauSouches.xlsx and /data/projet3/Output/results_windows/all_samples.het.5kb_LOH_recalc.tsv   
 
 Résultats présents dans /data/projet3/Output/results_heatmap     
+
+#### **6/11/2025** :Calcul du nombre de SNPs par souche Loane + Dalal   
+Génération d'un png et d'un csv contenant les nombres de SNPs hétérozygote par souche.    
+script : count_number_SNPs.py      
+version python utilisée : Python 3.13.7    
+librairies utilisées :   
+import sys, os, gzip    
+import pandas as pd    
+import matplotlib.pyplot as plt      
+takes as argument an Input : dossier contenant les fichiers VCF après filtering      
+Résultats présents dans : /data/projet3/Output/results_numbers_SNP_het    
+
