@@ -179,7 +179,7 @@ entrée : /data/projet3/Output/results_1kb/*.het.1kb.snpden
 Commandes et options utilisées  
 bash + set -euo pipefail  
 Force le script propre : stop en cas d’erreur (-e), interdiction des variables non-déclarées (-u), erreurs dans les pipes détectées (-o pipefail).  
-IN_DIR / OUT_DIR + mkdir -p  
+`IN_DIR / OUT_DIR + mkdir -p`  
 Definit les chemins d’entrée/sortie. mkdir -p crée le dossier si nécessaire.  
 aggregate_N (fonction awk)  
 Agrege N lignes consecutives correspondant à des fenêtres de 1 kb pour reconstruire une fenetre N×1 kb.  
@@ -202,50 +202,60 @@ version python utilisée : Python 3.13.7
 script: plot.py   
 Résultats presents dans results_plot en fct de la taille de sliding window utilisée.  
  
-#### **04/11/2025** : Annotation LOH/HET des fenêtres 5 kb (Zeynep)  
-But est d'ajouter une colonne STATUS par fenêtre (LOH vs HET) sur toutes les sorties 5 kb, avec la règle LOH si N_HET ≤ 3, sinon HET.  
-script : loh.py  
-options utilisées :  
-glob.glob() : permet de parcourir automatiquement tous les fichiers correspondant au motif donné.  
-threshold = 3 : fixe la limite pour décider entre LOH et HET  
-replace(".het.5kb.tsv", ".het.5kb_LOH.tsv") : crée un fichier de sortie sans écraser les originaux.  
-enumerate(fin) : garde la position de la ligne (utile pour distinguer l’en-tête).  
-try/except ValueError : évite une erreur si la colonne N_HET contient autre chose qu’un entier.  
-`\t.join(parts)` : conserve le format TSV (tabulé).  
-Chaque fichier produit a donc la même structure que l’original, avec une colonne STATUS en plus.  
- 
-Recalcul global avec awk (fichier fusionné “all_samples”)  
-nettoyer et recalculer la colonne STATUS dans le fichier global (all_samples.het.5kb_LOH.tsv), en supprimant la colonne erronée précédente.  
-partie awk du code  
-options utilisée :  
-`BEGIN{OFS="\t"}` : définit le séparateur de colonnes à la tabulation pour la sortie.  
-`NR==1{...; next}` : traite la première ligne (l’en-tête) -> imprime uniquement les 6 premières colonnes et ajoute une nouvelle colonne STATUS.  
-`{print $1,$2,$3,$4,$5,$6,($5<=3?"LOH":"HET")}` :  
-`$5` = colonne N_HET.  
-Si `$5` <= 3 -> écrit LOH, sinon HET.  
-La colonne STATUS précédente (7e) est donc supprimée, remplacée par une colonne recalculée.  
-`>` : redirige le résultat dans un nouveau fichier _recalc.tsv (sans écraser l’original).  
- 
-Résultats présants dans results_windows  
- 
-#### **04/11/2025** : Ajout d'header  
-script utilisée : header.py  
-Options utilisées :  
-glob.glob() : sélectionne tous les fichiers .tsv du dossier.  
-if "all" in f: : ignore les fichiers fusionnés globaux.  
-if "5kb_LOH" / "10kb" / "20kb" : définit le bon en-tête selon la taille de fenêtre.  
-startswith("CHROM") : vérifie si un en-tête est déjà présent.  
-write(header) + writelines(lines) : ajoute l’en-tête puis recopie le contenu original.  
-partie awk du code  
-Options utilisées :  
-BEGIN{OFS="\t"} : sortie tabulée (format TSV).  
-NR==1 : remplace l’en-tête existant.  
-`$4` : colonne N_HET.  
-`(n<=3?"LOH":"HET")` : applique la règle LOH/HET.  
-`> "${f%.tsv}_fixed.tsv"` : crée un nouveau fichier sans écraser l’ancien.  
- 
-Résultats présents dans : /data/projet3/Output/results_windows/  
- 
+#### **04/11/2025** : Annotation LOH/HET des fenêtres 5 kb Zeynep  
+
+But : ajouter une colonne STATUS par fenêtre (LOH vs HET) sur toutes les sorties 5 kb, selon la règle :  
+**LOH si `N_HET ≤ 3`, sinon HET.**  
+
+**Script utilisé :** loh.py  
+
+**Options et éléments principaux :**  
+`glob.glob()` : permet de parcourir automatiquement tous les fichiers correspondant au motif donné.  
+`threshold = 3` : fixe la limite pour décider entre LOH et HET.  
+`replace(".het.5kb.tsv", ".het.5kb_LOH.tsv")` : crée un fichier de sortie sans écraser les originaux.  
+`enumerate(fin)` : garde la position de la ligne (utile pour distinguer l’en-tête).  
+`try/except ValueError` : évite une erreur si la colonne `N_HET` contient autre chose qu’un entier.  
+`"\t".join(parts)` : conserve le format TSV (tabulé).  
+
+Chaque fichier produit conserve la même structure que l’original, avec une colonne STATUS supplémentaire.  
+
+##### **Recalcul global avec AWK**  
+Fichier fusionné : all_samples.het.5kb_LOH.tsv
+
+Objectif : nettoyer et recalculer la colonne STATUS dans le fichier global, en supprimant la colonne erronée précédente.  
+
+**Partie AWK du code :**  
+- `BEGIN { OFS = "\t" }` : définit le séparateur de colonnes à la tabulation pour la sortie.  
+- `NR == 1 { ...; next }` : traite la première ligne (l’en-tête) → imprime uniquement les 6 premières colonnes et ajoute une nouvelle colonne STATUS.  
+- `{ print $1, $2, $3, $4, $5, $6, ($5 <= 3 ? "LOH" : "HET") }` :  
+  - `$5` correspond à la colonne N_HET.  
+  - Si $5 <= 3, écrit LOH  
+  - La colonne STATUS précédente (7e) est donc supprimée et remplacée par une colonne recalculée.  
+- `>` : redirige le résultat dans un nouveau fichier `_recalc.tsv` sans écraser l’original.  
+
+**Résultats présents dans :** `/data/projet3/Output/results_windows/`
+
+
+#### **04/11/2025** : Ajout d’en-tête (Header)  
+
+**Script utilisé :** `header.py`  
+
+**Options principales :**  
+- glob.glob() : sélectionne tous les fichiers .tsv du dossier.  
+- if "all" in f: : ignore les fichiers fusionnés globaux.  
+- if "5kb_LOH" / "10kb" / "20kb" : définit le bon en-tête selon la taille de fenêtre.  
+- startswith("CHROM") : vérifie si un en-tête est déjà présent.  
+- write(header) + writelines(lines) : ajoute l’en-tête puis recopie le contenu original.  
+
+
+##### **Partie AWK du code :**  
+- `BEGIN { OFS = "\t" }` : sortie tabulée (format TSV).  
+- `NR == 1` : remplace l’en-tête existant.  
+- `$4` : colonne `N_HET`.  
+- `(n <= 3 ? "LOH" : "HET")` : applique la règle LOH/HET.  
+- `> "${f%.tsv}_fixed.tsv"` : crée un nouveau fichier sans écraser l’ancien.  
+
+**Résultats présents dans :** `/data/projet3/Output/results_windows/`
 #### **04-6/11/2025** : Plotting Heatmaps Dalal     
 Génération des heatmaps de LOH pour chaque chromosome afin de comparer les régions LOH et HET entre différentes souches sur une grille commune de 1 kb.  
 Concatenation des chromosomes pour obtenir une représentation continue du génome entier sous forme de heatmap combinée.    
