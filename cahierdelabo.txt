@@ -166,7 +166,7 @@ vcftools --SNPdensity 1000
 compte, pour chaque fenêtre, le nombre de SNP hétérozygotes  
 produit un tableau avec : CHROM BIN_START SNP_COUNT VARIANTS/Kb  
 awk  
-ajoute une colonne SAMPLE et concatène toutes les souches,génère un fichier final : all_samples.het.1kb.snpden.tsv ,ce fichier nous servira pour les plots (R)  
+ajoute une colonne SAMPLE et concatène toutes les souches,génère un fichier final : all_samples.het.1kb.snpden.tsv ,ce fichier nous servira pour les plots  
 Résultats  presents dans /data/projet3/Output/results_1kb/  
 1 fichier par souche : YJSxxxx.het.1kb.snpden  
 1 fichier fusionné : all_samples.het.1kb.snpden.tsv  
@@ -190,9 +190,9 @@ awk -v N=5 / N=10 / N=20
 Additionne N valeurs, puis écrit : CHROM START END N_HET.  
 awk -v S=… -v W=… 'print ...' >> MERGED  
 Ajoute les colonnes SAMPLE et WINDOW_BP et concatène toutes les souches dans un seul fichier final par taille de fenêtre (5kb, 10kb, 20kb).  
-> / >> redirections  
-> écrase un fichier (pour écrire les entêtes).  
->> ajoute à la suite (pour remplir les fichiers fusionnés).  
+`> / >>` redirections  
+`>` écrase un fichier (pour écrire les entêtes).    
+`>>` ajoute à la suite (pour remplir les fichiers fusionnés).    
 Aucune dépendance supplémentaire cad aucune ré-exécution de vcftools : uniquement re-formatage depuis les 1 kb déjà produits.  
 Les resultats sont present dans :  /data/projet3/Output/results_windows/  
  
@@ -211,20 +211,20 @@ threshold = 3 : fixe la limite pour décider entre LOH et HET
 replace(".het.5kb.tsv", ".het.5kb_LOH.tsv") : crée un fichier de sortie sans écraser les originaux.  
 enumerate(fin) : garde la position de la ligne (utile pour distinguer l’en-tête).  
 try/except ValueError : évite une erreur si la colonne N_HET contient autre chose qu’un entier.  
-\t.join(parts)` : conserve le format TSV (tabulé).  
+`\t.join(parts)` : conserve le format TSV (tabulé).  
 Chaque fichier produit a donc la même structure que l’original, avec une colonne STATUS en plus.  
  
 Recalcul global avec awk (fichier fusionné “all_samples”)  
 nettoyer et recalculer la colonne STATUS dans le fichier global (all_samples.het.5kb_LOH.tsv), en supprimant la colonne erronée précédente.  
 partie awk du code  
 options utilisée :  
-BEGIN{OFS="\t"} : définit le séparateur de colonnes à la tabulation pour la sortie.  
-NR==1{...; next} : traite la première ligne (l’en-tête) -> imprime uniquement les 6 premières colonnes et ajoute une nouvelle colonne STATUS.  
-{print $1,$2,$3,$4,$5,$6,($5<=3?"LOH":"HET")} :  
-$5 = colonne N_HET.  
-Si $5 <= 3 -> écrit LOH, sinon HET.  
+`BEGIN{OFS="\t"}` : définit le séparateur de colonnes à la tabulation pour la sortie.  
+`NR==1{...; next}` : traite la première ligne (l’en-tête) -> imprime uniquement les 6 premières colonnes et ajoute une nouvelle colonne STATUS.  
+`{print $1,$2,$3,$4,$5,$6,($5<=3?"LOH":"HET")}` :  
+`$5` = colonne N_HET.  
+Si `$5` <= 3 -> écrit LOH, sinon HET.  
 La colonne STATUS précédente (7e) est donc supprimée, remplacée par une colonne recalculée.  
-> : redirige le résultat dans un nouveau fichier _recalc.tsv (sans écraser l’original).  
+`>` : redirige le résultat dans un nouveau fichier _recalc.tsv (sans écraser l’original).  
  
 Résultats présants dans results_windows  
  
@@ -240,9 +240,9 @@ partie awk du code
 Options utilisées :  
 BEGIN{OFS="\t"} : sortie tabulée (format TSV).  
 NR==1 : remplace l’en-tête existant.  
-$4 : colonne N_HET.  
-(n<=3?"LOH":"HET") : applique la règle LOH/HET.  
-> "${f%.tsv}_fixed.tsv" : crée un nouveau fichier sans écraser l’ancien.  
+`$4` : colonne N_HET.  
+`(n<=3?"LOH":"HET")` : applique la règle LOH/HET.  
+`> "${f%.tsv}_fixed.tsv"` : crée un nouveau fichier sans écraser l’ancien.  
  
 Résultats présents dans : /data/projet3/Output/results_windows/  
  
@@ -262,14 +262,33 @@ input : /data/projet3/Input/tableauSouches.xlsx and /data/projet3/Output/results
 
 Résultats présents dans /data/projet3/Output/results_heatmap     
 
-#### **6/11/2025** :Calcul du nombre de SNPs par souche Loane + Dalal   
-Génération d'un png et d'un csv contenant les nombres de SNPs hétérozygote par souche.    
-script : count_number_SNPs.py      
-version python utilisée : Python 3.13.7    
-librairies utilisées :   
-import sys, os, gzip    
-import pandas as pd    
-import matplotlib.pyplot as plt      
-takes as argument an Input : dossier contenant les fichiers VCF après filtering      
-Résultats présents dans : /data/projet3/Output/results_numbers_SNP_het    
+#### **06/11/2025** :Calcul du nombre de SNPs par souche Loane + Dalal     
+Génération d'un png et d'un csv contenant les nombres de SNPs hétérozygote par souche.      
+script : count_number_SNPs.py        
+version python utilisée : Python 3.13.7      
+librairies utilisées :     
+import sys, os, gzip      
+import pandas as pd      
+import matplotlib.pyplot as plt        
+takes as argument an Input : dossier contenant les fichiers VCF après filtering        
+Résultats présents dans : /data/projet3/Output/results_numbers_SNP_het      
 
+#### **09/11/2025** : Dalal  
+1.Génération d’un fichier CSV contenant les statistiques de mapping (taux d’alignement et profondeur moyenne) pour l’ensemble des souches.  
+script : recap_mapping.sh  
+outils utilisés : samtools flagstat et samtools depth  
+options utilisées :  
+- samtools flagstat : extraire le nombre total de lectures et le nombre de lectures mappées.  
+- samtools depth : calculer la profondeur moyenne de séquençage par position sur le génome.  
+takes as argument an Input : dossier contenant les fichiers BAM obtenus après alignement  
+Résultats présents dans : /data/projet3/Output/results_mapping/recap_mapping.csv  
+
+2.Génération d’un PNG récapitulatif des moyennes globales (taux de mapping et profondeur moyenne) à partir du fichier CSV obtenu.  
+script : tablea_mapping.py  
+version python utilisée : Python 3.13.7  
+librairies utilisées :  
+import pandas as pd  
+import matplotlib.pyplot as plt  
+from pathlib import Path  
+takes as argument an Input : fichier recap_mapping.csv généré précédemment  
+Résultats présents dans : /data/projet3/Output/results_mapping/mapping_summary.png  

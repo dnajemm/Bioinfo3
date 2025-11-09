@@ -1,9 +1,10 @@
 # Project 3 - Genomic Variant Analysis  
  
-This repository contains a bioinformatics pipeline for the identification and analysis of genomic variants from Illumina sequencing data.  
-The workflow includes quality control (FastQC and variant filtering), read alignment, variant calling, heterozygosity analysis using sliding windows, and final visualization of results through LOH/heterozygosity heatmaps.  
- 
-## Project Structure  
+This repository contains a bioinformatics pipeline for the identification and analysis of genomic variants from Illumina sequencing data.    
+The workflow includes quality control (FastQC and variant filtering), read alignment, variant calling, heterozygosity analysis using sliding windows, and final visualization of results through LOH/heterozygosity heatmaps.    
+It also includes scripts for statistical summaries and visualizations of mapping statistics and SNPS number per sample.  
+
+## Project Structure    
  
 projet3/  
 ├── Input/                  # Input data  
@@ -23,7 +24,7 @@ projet3/
 │   ├── results_1kb/        # 1kb sliding window results  
 │   ├── results_filtering/  # Filtered VCF variant files  
 │   ├── results_heatmap/    # Heatmap plots  
-│   ├── results_mapping/    # Alignment results (BAM/SAM files)  
+│   ├── results_mapping/    # Alignment results (BAM/SAM files)  et fichier recap_mapping.csv  
 │   ├── results_numbers_SNP_het/  # Counts of SNPs and heterozygosity  
 │   ├── results_plot/       # Heterozygosity plots for different window sizes  
 │   ├── results_variant_calling/  # Variant calling results (VCF files)  
@@ -39,9 +40,11 @@ projet3/
 │   ├── heatmap.py                 # Generate LOH/heterozygosity heatmaps  
 │   ├── loh.py                     # LOH calculation functions  
 │   ├── mapping.sh                 # BWA-MEM alignment  
-│   ├── plot.py                    # Individual sample heterozygosity plots  
+│   ├── plot.py                    # Individual sample heterozygosity plots    
+│   ├── recap_mapping.sh           # Generate mapping summary CSV  
 │   ├── sliding_win2.sh            # 5kb/10kb/20kb sliding windows  
 │   ├── sliding_window.sh          # 1kb sliding windows  
+│   ├── tableau_mapping.py          # Create mapping summary plot  
 │   ├── telechargement.sh          # Download from SRA  
 │   └── variant_calling.sh         # Variant calling with bcftools  
 ├── conda/                  # Conda environment directory  
@@ -69,10 +72,12 @@ projet3/
 ### 6. Sliding Window Analysis  
 - Analyze heterozygosity in 1kb windows using `sliding_window.sh` script → results stored in `/Output/results_1kb/`  
 - Analyze heterozygosity in 5kb/10kb/20kb windows using `sliding_win2.sh` script → results stored in `/Output/results_windows/`  
-### 7. Visualization and Analysis  
-- Generate individual sample plots using `plot.py` script → results stored in `/Output/results_plot/`  
-- Generate density plots (all strains combined) using `density_plot.py` script → results stored in `/Output/result_density_plot/`  
-- Count SNPs per sample/region using `count_number_SNPs.py` script → results stored in `/Output/results_numbers_SNP_het/`  
+### 7. Visualization and Analysis   
+- Generate mapping summary plot using `recap_mapping.sh` script and `tableau_mapping.py` script  → results stored in `/Output/results_mapping/` as `recap_mapping.csv` and corresponding plot as `mapping_summary.png`   
+- Generate individual sample plots using `plot.py` script → results stored in `/Output/results_plot/`    
+- Generate density plots (all strains combined) using `density_plot.py` script → results stored in `/Output/result_density_plot/`    
+- Count SNPs per sample/region using `count_number_SNPs.py` script → results stored in `/Output/results_numbers_SNP_het/`    
+
 ### 8. Heatmap Generation  
 - Generate LOH/heterozygosity heatmaps using `heatmap.py` script → results stored in `/Output/results_heatmap/`  
 - **Input files:**  
